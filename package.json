@@ -1,0 +1,16 @@
+{
+  "name": "annapos",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "build": "yarn workspace frontend build",
+    "start": "yarn workspace frontend dev",
+    "build-and-start": "yarn build && yarn start"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7"
+  }
+}
