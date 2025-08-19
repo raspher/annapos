@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "repository": "https://github.com/raspher/annapos",
+  "author": "Szymon Scholz",
+  "license": "MIT",
+  "private": true
+}
