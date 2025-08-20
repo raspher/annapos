@@ -1,17 +1,18 @@
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
 // todo: read from env
-const secretKey = 'your_secret_key';
+dotenv.config({path: "../.env"});
+const secretKey = process.env.SECRET_KEY;
 
 export function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-    if (!token) return res.status(401).send('Token required');
-
-    jwt.verify(token, secretKey, (err, user) => {
-        if (err) return res.status(403).send('Invalid or expired token');
-        req.user = user;
+    try {
+        req.user = jwt.verify(token, secretKey);
         next();
-    });
+    } catch (err) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
 }
