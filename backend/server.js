@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { authenticateToken } from './middleware.js';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import xss from 'xss-clean';
+import xss from 'xss';
 
 dotenv.config({path: "../.env"});
 
@@ -27,7 +27,30 @@ let users = [{
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(xss());
+
+const sanitize = (obj) => {
+    if (typeof obj === "string") return xss(obj);
+    if (typeof obj === "object" && obj !== null) {
+        for (const key in obj) {
+            obj[key] = sanitize(obj[key]);
+        }
+    }
+    return obj;
+};
+
+app.use((req, res, next) => {
+    req.body = sanitize(req.body);
+
+    for (const key of Object.keys(req.query)) {
+        req.query[key] = sanitize(req.query[key]);
+    }
+
+    for (const key of Object.keys(req.params)) {
+        req.params[key] = sanitize(req.params[key]);
+    }
+
+    next();
+});
 
 // Login route
 app.post('/api/login', async (req, res) => {
