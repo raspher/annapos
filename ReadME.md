@@ -23,3 +23,7 @@ Projekt ma 2 tryby:
 **TODO**
 
 zalecany `docker-compose`
+
+## Architektura
+
+- Vertical slice
