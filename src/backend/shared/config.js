@@ -13,4 +13,5 @@ function getEnvVar(name) {
 export const config = {
     JWT_SECRET: getEnvVar("JWT_SECRET"),
     API_PORT: getEnvVar("API_PORT"),
+    PROFILE: getEnvVar("PROFILE"),
 };
