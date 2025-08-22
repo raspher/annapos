@@ -1,54 +1,74 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    useMemo,
+} from "react";
+import PropTypes from "prop-types";
+import {AuthAPI} from "../services/api.js";
 
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [accessToken, setAccessToken] = useState(null);
+    const [loading, setLoading] = useState(true); // global loading
 
+    // Check session on mount
     useEffect(() => {
-        fetch("/api/me", { credentials: "include" })
-            .then(res => {
-                if (!res.ok) throw new Error("Not logged in");
-                return res.json();
-            })
-            .then(data => {
+        (async () => {
+            setLoading(true);
+            try {
+                const data = await AuthAPI.cookie();
                 setUser(data.user);
                 setAccessToken(data.accessToken);
-            })
-            .catch(() => {
+            } catch (err) {
+                console.error("Fetch error:", err);
                 setUser(null);
                 setAccessToken(null);
-            });
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, []);
 
     const login = async (email, password) => {
-        const res = await fetch("/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
-
-        if (!res.ok) throw new Error("Login failed");
-        const data = await res.json();
-        setUser(data.user);
-        setAccessToken(data.accessToken);
+        setLoading(true);
+        try {
+            const data = await AuthAPI.login(email, password);
+            setUser(data.user);
+            setAccessToken(data.accessToken);
+            return true;
+        } catch (err) {
+            console.error("Login failed:", err);
+            return false;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const logout = async () => {
-        await fetch("/api/logout", {
-            method: "POST",
-            credentials: "include",
-        });
-        setUser(null);
-        setAccessToken(null);
+        setLoading(true);
+        try {
+            await AuthAPI.logout();
+        } finally {
+            setUser(null);
+            setAccessToken(null);
+            setLoading(false);
+        }
     };
 
-    return (
-        <AuthContext.Provider value={{ user, accessToken, login, logout }}>
-            {children}
-        </AuthContext.Provider>
+    const value = useMemo(
+        () => ({ user, accessToken, login, logout, loading }),
+        [user, accessToken, loading]
     );
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+AuthProvider.propTypes = {
+    children: PropTypes.node.isRequired,
 };
 
 export const useAuth = () => {

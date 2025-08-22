@@ -1,4 +1,5 @@
-const db = require("../shared/db.js");
+import db from "../shared/db.js";
+
 
 const userRepository = {
     async createUser({name, email, passwordHash}) {
