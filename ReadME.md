@@ -6,14 +6,18 @@ Rozwiązanie mające na celu ułatwienie obsługi zamówień w sklepie stacjonar
 - Backend: Express
 
 ## Uruchamianie
+- `docker-compose --profile dev --env-file .\.env.dev up`
+- `docker-compose --profile prod --env-file .\.env.prod up`
 
-Projekt ma 2 tryby:
-- `yarn dev` - uruchamia frontend i backend w trybie debug
-- - debugowanie frontendu domyślnie na porcie `5173`
-- - debugowanie backendu domyślnie na porcie `9229`
-- `yarn prod` - buduje frontend i uruchamia backend
-- - Frontend jest budowany i optymalizowany do katalogu `src/frontend/dist`
-- - Backend hostuje statyczny frontend pod głównym adresem `example.com`, a API pod `example.com/api/`
+Projekt ma 2 profile:
+
+dev:
+- debugowanie backendu domyślnie na porcie `9229`
+- debugowanie frontendu na porcie `${FRONTEND_PORT}`
+
+prod:
+- Frontend jest budowany i optymalizowany
+- Backend hostuje statyczny frontend pod głównym adresem `example.com`, a API pod `example.com/api/`
 
 ### Zmienne środowiskowe
 - `VITE_API_BASE_URL` - URL do backendu (`https://example.com:12345/api` | `/api` dla prod)
