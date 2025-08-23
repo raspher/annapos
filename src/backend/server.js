@@ -16,8 +16,8 @@ else app.use(cors())
 
 app.use('/api', apiRoutes);
 
-// Frontend
-app.use("/", express.static("../frontend/dist/"));
+// Frontend used only in production
+app.use("/", express.static("./public/"));
 
 app.listen(config.API_PORT, () => {
     console.log(`Server started on port http://localhost:${config.API_PORT}/`);
