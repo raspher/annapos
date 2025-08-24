@@ -3,7 +3,7 @@ FROM node:22-alpine3.22 AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/yarn.lock ./
-RUN yarn install
+RUN yarn
 COPY frontend ./
 RUN yarn build
 
@@ -13,7 +13,7 @@ FROM node:22-alpine3.22 AS backend-builder
 
 WORKDIR /app/backend
 COPY backend/package.json backend/yarn.lock ./
-RUN yarn install
+RUN yarn
 COPY backend ./
 
 # Copy only the frontend build output

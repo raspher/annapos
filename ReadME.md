@@ -6,8 +6,8 @@ Rozwiązanie mające na celu ułatwienie obsługi zamówień w sklepie stacjonar
 - Backend: Express
 
 ## Uruchamianie
-- `docker-compose --profile dev --env-file .\.env.dev up`
-- `docker-compose --profile prod --env-file .\.env.prod up`
+- `docker-compose --profile dev --env-file .\.env.dev up --build`
+- `docker-compose --profile prod --env-file .\.env.prod up --build`
 
 Projekt ma 2 profile:
 
