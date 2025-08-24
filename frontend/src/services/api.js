@@ -1,36 +1,71 @@
-async function request(endpoint, { method = "GET", body, headers = {} } = {}) {
-    const options = {
-        method,
-        credentials: "include", // always send cookies
-        headers: {
-            "Content-Type": "application/json",
-            ...headers,
-        },
-    };
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
-    if (body) {
-        options.body = JSON.stringify(body);
-    }
-    let url = `${import.meta.env.VITE_API_BASE_URL}${endpoint}`;
+async function request(path, { method = "GET", body, headers = {} } = {}) {
+  const opts = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    credentials: "include", // allow cookies for auth
+  };
+  if (body !== undefined) {
+    opts.body = typeof body === "string" ? body : JSON.stringify(body);
+  }
 
-    const res = await fetch(url, options);
+  const res = await fetch(`${BASE_URL}${path}`, opts);
+  const contentType = res.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const data = isJson ? await res.json() : await res.text();
 
-    if (!res.ok) {
-        let errorMessage = `Request to ${url} failed with status ${res.status}`;
-        try {
-            const errData = await res.json();
-            errorMessage = errData.message || errorMessage;
-        } catch {
-            /* ignore JSON parse errors */
-        }
-        throw new Error(errorMessage);
-    }
-
-    return res.json();
+  if (!res.ok) {
+    const message = isJson ? (data?.message || JSON.stringify(data)) : data;
+    throw new Error(message || `Request failed: ${res.status}`);
+  }
+  return data;
 }
 
 export const AuthAPI = {
-    cookie: () => request("/auth/cookie"),
-    login: (email, password) => request("/auth/login", { method: "POST", body: { email, password } }),
-    logout: () => request("/auth/logout", { method: "POST" }),
+  async login(email, password) {
+    const data = await request("/auth/login", {
+      method: "POST",
+      body: { email, password },
+    }).then(value => JSON.parse(value));
+    // backend returns: { user, token }
+    return { user: data.user.name, accessToken: data.token };
+  },
+  async logout() {
+    await request("/auth/logout", { method: "POST" });
+    return true;
+  },
+  async cookie() {
+    const data = await request("/auth/cookie");
+    // backend returns: { user, token }
+    return { user: data.user, accessToken: data.token };
+  },
+};
+
+export const CategoriesAPI = {
+  async list({ q } = {}) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    return request(`/categories?${params.toString()}`);
+  },
+};
+
+export const ProductsAPI = {
+  async list({ q, categoryId, limit = 20, offset = 0 } = {}) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (categoryId) params.set("categoryId", String(categoryId));
+    if (limit !== undefined) params.set("limit", String(limit));
+    if (offset !== undefined) params.set("offset", String(offset));
+    return request(`/products?${params.toString()}`);
+  },
+};
+
+export const SyncAPI = {
+  async fakestore() {
+    return request("/sync/fakestore", { method: "POST" });
+  },
 };
