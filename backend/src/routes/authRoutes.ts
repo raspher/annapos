@@ -1,21 +1,23 @@
+import 'reflect-metadata';
 import Router, { Request, Response } from 'express';
-import config from '../shared/config.js';
-import { authenticateToken} from './middleware.js';
+import config from '../shared/config.ts';
+import { authenticateToken} from './middleware.ts';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import userRepository from '../db/repositories/userRepository.js';
-import {AuthPayload} from "../types/AuthPayload.js";
+import dataSource from "../db/dataSource.ts";
+import {User} from "../db/entities/User.ts";
+import {AuthPayload} from "../types/AuthPayload.ts";
 
 const router = Router();
 
-interface User {
+interface IUser {
   id: number;
   username: string;
   password: string;
 }
 
-function createJwtToken(user: { username: string }) {
-  return jwt.sign({ username: user.username }, config.JWT_SECRET, { expiresIn: '1h' });
+function createJwtToken(username: string) {
+  return jwt.sign({ username: username }, config.JWT_SECRET, { expiresIn: '1h' });
 }
 
 const getCookieOptions = {
@@ -27,13 +29,13 @@ const getCookieOptions = {
 
 router.post('/login', async (req: Request, res: Response) => {
   const { email, password } = req.body as { email: string; password: string };
-  const user = (await userRepository.findOne({ where: { email } })) as unknown as User | null;
+  const user = (await dataSource.manager.findOne(User, { where: { email: email } }));
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).send('Invalid credentials');
   }
 
-  const token = createJwtToken(user);
+  const token = createJwtToken(user.name);
   res.cookie('token', token, getCookieOptions);
   res.status(200).send(JSON.stringify({ user, token }));
 });
@@ -47,13 +49,6 @@ router.get('/cookie', authenticateToken, (req: Request, res: Response) => {
     let user = (req as Request & { user: AuthPayload }).user.username;
     let token = req.cookies.token;
     res.status(200).send(JSON.stringify({user, token}));
-});
-
-router.get('/refresh', authenticateToken, (req: Request, res: Response) => {
-    const token = createJwtToken((req as Request & { user: AuthPayload }).user);
-    res.cookie("token", token, getCookieOptions);
-    let userName = (req as Request & { user: AuthPayload }).user.username;
-    res.status(200).send(JSON.stringify({user: userName, token}));
 });
 
 export default router;

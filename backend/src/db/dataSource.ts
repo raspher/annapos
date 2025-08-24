@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
-import { User } from './entities/User.js';
-import config from '../shared/config.js';
+import { User } from './entities/User.ts';
+import config from '../shared/config.ts';
 
 const annaposDataSource = new DataSource({
   type: 'postgres',
@@ -11,8 +11,15 @@ const annaposDataSource = new DataSource({
   database: `${config.POSTGRES_DB}`,
   synchronize: false,
   logging: true,
-  entities: ['entities/*.ts'],
+  entities: [User],
   migrations: ['../../migrations/*.ts'],
 });
+
+try {
+    await annaposDataSource.initialize()
+    console.log("Data Source has been initialized!")
+} catch (error) {
+    console.error("Error during Data Source initialization", error)
+}
 
 export default annaposDataSource;
