@@ -1,340 +1,73 @@
-import { useEffect, useMemo, useState } from "react";
-import { CategoriesAPI, ProductsAPI, SyncAPI, OrdersAPI } from "../services/api.js";
-import Loading from "../components/Loading.jsx";
+import { useState } from "react";
 import { useAuth } from "../components/Auth.jsx";
+import { CartProvider } from "../context/CartContext.jsx";
+import ProductsPage from "./ProductsPage.jsx";
+import OrdersPage from "./OrdersPage.jsx";
+import CartPage from "./CartPage.jsx";
+
+const views = {
+  PRODUCTS: "products",
+  ORDERS: "orders",
+  CART: "cart",
+};
 
 export default function StorePage() {
-    const { logout } = useAuth();
+  const { logout } = useAuth();
+  const [view, setView] = useState(views.PRODUCTS);
 
-    const [catQuery, setCatQuery] = useState("");
-    const [categories, setCategories] = useState([]);
-    const [categoriesLoading, setCategoriesLoading] = useState(true);
+  return (
+    <CartProvider>
+      <div style={{ display: "flex", minHeight: "100vh" }}>
+        {/* Left Navigation */}
+        <nav style={{ width: 220, borderRight: "1px solid #e5e7eb", padding: 16, background: "#fbfbfb" }}>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>AnnaPOS</div>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+            <li>
+              <button
+                onClick={() => setView(views.PRODUCTS)}
+                style={navBtnStyle(view === views.PRODUCTS)}
+              >Products</button>
+            </li>
+            <li>
+              <button
+                onClick={() => setView(views.ORDERS)}
+                style={navBtnStyle(view === views.ORDERS)}
+              >Orders</button>
+            </li>
+            <li>
+              <button
+                onClick={() => setView(views.CART)}
+                style={navBtnStyle(view === views.CART)}
+              >Cart</button>
+            </li>
+          </ul>
 
-    const [prodQuery, setProdQuery] = useState("");
-    const [selectedCategoryId, setSelectedCategoryId] = useState("");
-    const [products, setProducts] = useState([]);
-    const [productsTotal, setProductsTotal] = useState(0);
-    const [limit, setLimit] = useState(20);
-    const [offset, setOffset] = useState(0);
-    const [productsLoading, setProductsLoading] = useState(true);
+          <div style={{ marginTop: "auto" }}>
+            <hr style={{ margin: "16px 0" }} />
+            <button onClick={logout} style={{ width: "100%" }}>Logout</button>
+          </div>
+        </nav>
 
-    const [syncing, setSyncing] = useState(false);
-    const [error, setError] = useState("");
-    const [info, setInfo] = useState("");
+        {/* Content */}
+        <section style={{ flex: 1, padding: 16 }}>
+          {view === views.PRODUCTS && <ProductsPage />}
+          {view === views.ORDERS && <OrdersPage />}
+          {view === views.CART && <CartPage />}
+        </section>
+      </div>
+    </CartProvider>
+  );
+}
 
-    // Cart state
-    const [cart, setCart] = useState([]); // { productId, title, price, quantity }
-
-    // Orders state
-    const [orders, setOrders] = useState([]);
-    const [ordersTotal, setOrdersTotal] = useState(0);
-    const [ordersLoading, setOrdersLoading] = useState(false);
-
-    const selectedCategory = useMemo(() => {
-        const idNum = Number(selectedCategoryId);
-        return categories.find(c => c.id === idNum) || null;
-    }, [selectedCategoryId, categories]);
-
-    useEffect(() => {
-        loadCategories();
-        loadOrders();
-    }, []);
-
-    useEffect(() => {
-        setOffset(0); // reset paging when filters change
-    }, [prodQuery, selectedCategoryId]);
-
-    useEffect(() => {
-        loadProducts();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [prodQuery, selectedCategoryId, limit, offset]);
-
-    async function loadCategories() {
-        setCategoriesLoading(true);
-        setError("");
-        try {
-            const res = await CategoriesAPI.list({ q: catQuery || undefined });
-            setCategories(res.items || []);
-        } catch (e) {
-            console.error(e);
-            setError(String(e.message || e));
-        } finally {
-            setCategoriesLoading(false);
-        }
-    }
-
-    async function loadProducts() {
-        setProductsLoading(true);
-        setError("");
-        try {
-            const res = await ProductsAPI.list({
-                q: prodQuery || undefined,
-                categoryId: selectedCategoryId ? Number(selectedCategoryId) : undefined,
-                limit,
-                offset,
-            });
-            setProducts(res.items || []);
-            setProductsTotal(res.total || 0);
-        } catch (e) {
-            console.error(e);
-            setError(String(e.message || e));
-        } finally {
-            setProductsLoading(false);
-        }
-    }
-
-    function addToCart(product) {
-        setCart(prev => {
-            const idx = prev.findIndex(i => i.productId === product.id);
-            if (idx >= 0) {
-                const copy = [...prev];
-                copy[idx] = { ...copy[idx], quantity: copy[idx].quantity + 1 };
-                return copy;
-            }
-            return [...prev, { productId: product.id, title: product.title, price: Number(product.price), quantity: 1 }];
-        });
-    }
-
-    function updateQty(productId, qty) {
-        setCart(prev => prev.map(i => i.productId === productId ? { ...i, quantity: Math.max(1, qty) } : i));
-    }
-
-    function removeFromCart(productId) {
-        setCart(prev => prev.filter(i => i.productId !== productId));
-    }
-
-    const cartTotal = useMemo(() => {
-        return cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    }, [cart]);
-
-    async function submitOrder() {
-        if (cart.length === 0) return;
-        setError("");
-        setInfo("");
-        try {
-            const payload = cart.map(i => ({ productId: i.productId, quantity: i.quantity }));
-            const order = await OrdersAPI.create(payload);
-            setCart([]);
-            setInfo(`Order #${order.id} created. Status: ${order.status}.`);
-            await loadOrders();
-        } catch (e) {
-            console.error(e);
-            setError(`Failed to create order: ${e.message || e}`);
-        }
-    }
-
-    async function loadOrders() {
-        setOrdersLoading(true);
-        try {
-            const res = await OrdersAPI.list({ limit: 50, offset: 0 });
-            setOrders(res.items || []);
-            setOrdersTotal(res.total || 0);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setOrdersLoading(false);
-        }
-    }
-
-    async function handleSync() {
-        setSyncing(true);
-        setInfo("");
-        setError("");
-        try {
-            await SyncAPI.fakestore();
-            setInfo("Synchronization completed.");
-            await Promise.all([loadCategories(), loadProducts()]);
-        } catch (e) {
-            console.error(e);
-            setError(`Sync failed: ${e.message || e}`);
-        } finally {
-            setSyncing(false);
-        }
-    }
-
-    return (
-        <div style={{ display: "flex", minHeight: "100vh" }}>
-            {/* Sidebar: Categories */}
-            <aside style={{ width: 300, padding: 16, borderRight: "1px solid #ddd" }}>
-                <h2>Categories</h2>
-                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                    <input
-                        type="text"
-                        placeholder="Search categories..."
-                        value={catQuery}
-                        onChange={(e) => setCatQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && loadCategories()}
-                        style={{ flex: 1 }}
-                    />
-                    <button onClick={loadCategories} disabled={categoriesLoading}>Search</button>
-                </div>
-                {categoriesLoading ? (
-                    <Loading message="Loading categories..." />
-                ) : (
-                    <ul style={{ listStyle: "none", padding: 0 }}>
-                        <li key="all">
-                            <label style={{ display: "block", padding: "4px 0" }}>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    value=""
-                                    checked={selectedCategoryId === ""}
-                                    onChange={(e) => setSelectedCategoryId(e.target.value)}
-                                />
-                                <span style={{ marginLeft: 8 }}>All products</span>
-                            </label>
-                        </li>
-                        {categories.map((c) => (
-                            <li key={c.id}>
-                                <label style={{ display: "block", padding: "4px 0" }}>
-                                    <input
-                                        type="radio"
-                                        name="category"
-                                        value={c.id}
-                                        checked={String(c.id) === String(selectedCategoryId)}
-                                        onChange={(e) => setSelectedCategoryId(e.target.value)}
-                                    />
-                                    <span style={{ marginLeft: 8 }}>{c.name}</span>
-                                </label>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </aside>
-
-            {/* Main: Products */}
-            <main style={{ flex: 1, padding: 16 }}>
-                <header style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-                    <h2 style={{ margin: 0, marginRight: "auto" }}>Products</h2>
-                    <button onClick={handleSync} disabled={syncing}>{syncing ? "Syncing..." : "Sync FakeStore"}</button>
-                    <button onClick={logout}>Logout</button>
-                </header>
-
-                {info && <p style={{ color: "green" }}>{info}</p>}
-                {error && <p style={{ color: "red" }}>{error}</p>}
-
-                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        value={prodQuery}
-                        onChange={(e) => setProdQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && loadProducts()}
-                        style={{ flex: 1 }}
-                    />
-                    <select
-                        value={selectedCategoryId}
-                        onChange={(e) => setSelectedCategoryId(e.target.value)}
-                        style={{ minWidth: 180 }}
-                    >
-                        <option value="">All categories</option>
-                        {categories.map((c) => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                    </select>
-                    <button onClick={loadProducts} disabled={productsLoading}>Search</button>
-                </div>
-
-                {productsLoading ? (
-                    <Loading message="Loading products..." />
-                ) : (
-                    <div>
-                        <div style={{ marginBottom: 8, color: "#666" }}>
-                            Showing {products.length} of {productsTotal} items
-                            {selectedCategory ? ` in '${selectedCategory.name}'` : ""}
-                        </div>
-                        <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-                            gap: 12,
-                        }}>
-                            {products.map((p) => (
-                                <div key={p.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-                                    {p.imageUrl && (
-                                        <img src={p.imageUrl} alt={p.title} style={{ maxWidth: "100%", maxHeight: 140, objectFit: "contain" }} />
-                                    )}
-                                    <div style={{ fontWeight: 600, marginTop: 8 }}>{p.title}</div>
-                                    <div style={{ color: "#444" }}>{p.category?.name}</div>
-                                    <div style={{ marginTop: 4 }}>Price: <b>{p.price}</b></div>
-                                    {p.ratingRate != null && (
-                                        <div style={{ color: "#777", fontSize: 12 }}>Rating: {p.ratingRate} ({p.ratingCount ?? 0})</div>
-                                    )}
-                                    <button style={{ marginTop: 8 }} onClick={() => addToCart(p)}>Add to Cart</button>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Pagination */}
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
-                            <button
-                                onClick={() => setOffset(Math.max(0, offset - limit))}
-                                disabled={offset === 0}
-                            >Prev</button>
-                            <span>Page {Math.floor(offset / limit) + 1}</span>
-                            <button
-                                onClick={() => setOffset(offset + limit)}
-                                disabled={offset + limit >= productsTotal}
-                            >Next</button>
-                            <span style={{ marginLeft: 12 }}>Per page:</span>
-                            <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
-                                {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                )}
-            </main>
-
-            {/* Right Sidebar: Cart and Orders */}
-            <aside style={{ width: 360, padding: 16, borderLeft: "1px solid #ddd", background: "#fafafa" }}>
-                <h2>Cart</h2>
-                {cart.length === 0 ? (
-                    <p>No items in cart.</p>
-                ) : (
-                    <ul style={{ listStyle: "none", padding: 0 }}>
-                        {cart.map(item => (
-                            <li key={item.productId} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 600 }}>{item.title}</div>
-                                    <div style={{ color: '#555' }}>Price: {item.price.toFixed(2)}</div>
-                                </div>
-                                <input type="number" min={1} value={item.quantity} onChange={e => updateQty(item.productId, Number(e.target.value))} style={{ width: 64 }} />
-                                <button onClick={() => removeFromCart(item.productId)}>Remove</button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-                <div style={{ marginTop: 8, fontWeight: 600 }}>Total: {cartTotal.toFixed(2)}</div>
-                <button onClick={submitOrder} disabled={cart.length === 0} style={{ marginTop: 8 }}>Send Order</button>
-
-                <hr style={{ margin: '16px 0' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <h2 style={{ margin: 0 }}>Orders</h2>
-                    <span style={{ color: '#777' }}>({ordersTotal})</span>
-                    <button style={{ marginLeft: 'auto' }} onClick={loadOrders} disabled={ordersLoading}>{ordersLoading ? 'Refreshing...' : 'Refresh'}</button>
-                </div>
-                {ordersLoading ? (
-                    <Loading message="Loading orders..." />
-                ) : (
-                    <div style={{ maxHeight: '45vh', overflow: 'auto' }}>
-                        {orders.map(o => (
-                            <details key={o.id} style={{ border: '1px solid #ddd', borderRadius: 6, padding: 8, marginBottom: 8 }}>
-                                <summary>#{o.id} - {o.status} - Total: {o.total}</summary>
-                                <ul style={{ listStyle: 'none', padding: 0, marginTop: 8 }}>
-                                    {(o.items || []).map(it => (
-                                        <li key={it.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                                            <span>{it.productName} x {it.quantity}</span>
-                                            <span>{it.productPrice} - {it.lineTotal}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                                {o.status === 'PENDING' && (
-                                    <button onClick={async () => { await OrdersAPI.complete(o.id); await loadOrders(); }}>Complete Order</button>
-                                )}
-                            </details>
-                        ))}
-                    </div>
-                )}
-            </aside>
-        </div>
-    );
+function navBtnStyle(active) {
+  return {
+    width: "100%",
+    textAlign: "left",
+    padding: "10px 12px",
+    background: active ? "#eef2ff" : "transparent",
+    border: active ? "1px solid #c7d2fe" : "1px solid transparent",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontWeight: active ? 700 : 500,
+  };
 }
