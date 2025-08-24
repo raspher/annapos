@@ -3,7 +3,7 @@ services:
     env_file:
       - .env.dev
     build:
-      context: ./src/backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: annapos-backend
     ports:
@@ -13,8 +13,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./src/backend:/app # host files override container
-      - /app/node_modules # preserve installed deps
+      - ./backend:/app # host files override container
     environment:
       - CHOKIDAR_USEPOLLING=true #polling for nodemon
     profiles: [ "dev" ]
@@ -23,7 +22,7 @@ services:
     env_file:
       - .env.dev
     build:
-      context: ./src/frontend
+      context: frontend
       dockerfile: Dockerfile
     container_name: annapos-frontend
     ports:
@@ -31,8 +30,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./src/frontend:/app # host files override container
-      - /app/node_modules # preserve installed deps
+      - ./frontend:/app # host files override container
     environment:
       - CHOKIDAR_USEPOLLING=true #polling for nodemon
     profiles: [ "dev" ]
@@ -41,7 +39,7 @@ services:
     env_file:
       - .env.prod
     build:
-      context: ./src
+      context: .
       dockerfile: Dockerfile
     container_name: annapos
     ports:
@@ -60,7 +58,7 @@ services:
     ports:
       - "5432:${POSTGRES_PORT}"
     volumes:
-      - ./data/dev_db:/var/lib/postgresql/data
+      - ./.data/dev_db:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 5s
