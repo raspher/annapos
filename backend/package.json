@@ -28,7 +28,7 @@
     "ts-node-dev": "^2.0.0"
   },
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch --inspect=0.0.0.0:9229 src/server.ts",
     "start": "yarn migrate:run && node ./dist/server.js",
     "build": "tsc -p .",
     "migrate:run": "node --loader ts-node/esm --env-file=../.env.dev ./node_modules/typeorm/cli.js migration:run -d dist/src/db/dataSource.js",
