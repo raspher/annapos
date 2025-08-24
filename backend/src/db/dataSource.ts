@@ -2,6 +2,8 @@ import { DataSource } from 'typeorm';
 import { User } from './entities/User.ts';
 import { Category } from './entities/Category.ts';
 import { Product } from './entities/Product.ts';
+import { Order } from './entities/Order.ts';
+import { OrderItem } from './entities/OrderItem.ts';
 import config from '../shared/config.ts';
 
 const annaposDataSource = new DataSource({
@@ -13,7 +15,7 @@ const annaposDataSource = new DataSource({
   database: `${config.POSTGRES_DB}`,
   synchronize: false,
   logging: true,
-  entities: [User, Category, Product],
+  entities: [User, Category, Product, Order, OrderItem],
   migrations: ['../../migrations/*.ts'],
 });
 

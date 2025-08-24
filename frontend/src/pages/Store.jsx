@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CategoriesAPI, ProductsAPI, SyncAPI } from "../services/api.js";
+import { CategoriesAPI, ProductsAPI, SyncAPI, OrdersAPI } from "../services/api.js";
 import Loading from "../components/Loading.jsx";
 import { useAuth } from "../components/Auth.jsx";
 
@@ -22,6 +22,14 @@ export default function StorePage() {
     const [error, setError] = useState("");
     const [info, setInfo] = useState("");
 
+    // Cart state
+    const [cart, setCart] = useState([]); // { productId, title, price, quantity }
+
+    // Orders state
+    const [orders, setOrders] = useState([]);
+    const [ordersTotal, setOrdersTotal] = useState(0);
+    const [ordersLoading, setOrdersLoading] = useState(false);
+
     const selectedCategory = useMemo(() => {
         const idNum = Number(selectedCategoryId);
         return categories.find(c => c.id === idNum) || null;
@@ -29,6 +37,7 @@ export default function StorePage() {
 
     useEffect(() => {
         loadCategories();
+        loadOrders();
     }, []);
 
     useEffect(() => {
@@ -71,6 +80,59 @@ export default function StorePage() {
             setError(String(e.message || e));
         } finally {
             setProductsLoading(false);
+        }
+    }
+
+    function addToCart(product) {
+        setCart(prev => {
+            const idx = prev.findIndex(i => i.productId === product.id);
+            if (idx >= 0) {
+                const copy = [...prev];
+                copy[idx] = { ...copy[idx], quantity: copy[idx].quantity + 1 };
+                return copy;
+            }
+            return [...prev, { productId: product.id, title: product.title, price: Number(product.price), quantity: 1 }];
+        });
+    }
+
+    function updateQty(productId, qty) {
+        setCart(prev => prev.map(i => i.productId === productId ? { ...i, quantity: Math.max(1, qty) } : i));
+    }
+
+    function removeFromCart(productId) {
+        setCart(prev => prev.filter(i => i.productId !== productId));
+    }
+
+    const cartTotal = useMemo(() => {
+        return cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    }, [cart]);
+
+    async function submitOrder() {
+        if (cart.length === 0) return;
+        setError("");
+        setInfo("");
+        try {
+            const payload = cart.map(i => ({ productId: i.productId, quantity: i.quantity }));
+            const order = await OrdersAPI.create(payload);
+            setCart([]);
+            setInfo(`Order #${order.id} created. Status: ${order.status}.`);
+            await loadOrders();
+        } catch (e) {
+            console.error(e);
+            setError(`Failed to create order: ${e.message || e}`);
+        }
+    }
+
+    async function loadOrders() {
+        setOrdersLoading(true);
+        try {
+            const res = await OrdersAPI.list({ limit: 50, offset: 0 });
+            setOrders(res.items || []);
+            setOrdersTotal(res.total || 0);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setOrdersLoading(false);
         }
     }
 
@@ -197,6 +259,7 @@ export default function StorePage() {
                                     {p.ratingRate != null && (
                                         <div style={{ color: "#777", fontSize: 12 }}>Rating: {p.ratingRate} ({p.ratingCount ?? 0})</div>
                                     )}
+                                    <button style={{ marginTop: 8 }} onClick={() => addToCart(p)}>Add to Cart</button>
                                 </div>
                             ))}
                         </div>
@@ -220,6 +283,58 @@ export default function StorePage() {
                     </div>
                 )}
             </main>
+
+            {/* Right Sidebar: Cart and Orders */}
+            <aside style={{ width: 360, padding: 16, borderLeft: "1px solid #ddd", background: "#fafafa" }}>
+                <h2>Cart</h2>
+                {cart.length === 0 ? (
+                    <p>No items in cart.</p>
+                ) : (
+                    <ul style={{ listStyle: "none", padding: 0 }}>
+                        {cart.map(item => (
+                            <li key={item.productId} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 600 }}>{item.title}</div>
+                                    <div style={{ color: '#555' }}>Price: {item.price.toFixed(2)}</div>
+                                </div>
+                                <input type="number" min={1} value={item.quantity} onChange={e => updateQty(item.productId, Number(e.target.value))} style={{ width: 64 }} />
+                                <button onClick={() => removeFromCart(item.productId)}>Remove</button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                <div style={{ marginTop: 8, fontWeight: 600 }}>Total: {cartTotal.toFixed(2)}</div>
+                <button onClick={submitOrder} disabled={cart.length === 0} style={{ marginTop: 8 }}>Send Order</button>
+
+                <hr style={{ margin: '16px 0' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h2 style={{ margin: 0 }}>Orders</h2>
+                    <span style={{ color: '#777' }}>({ordersTotal})</span>
+                    <button style={{ marginLeft: 'auto' }} onClick={loadOrders} disabled={ordersLoading}>{ordersLoading ? 'Refreshing...' : 'Refresh'}</button>
+                </div>
+                {ordersLoading ? (
+                    <Loading message="Loading orders..." />
+                ) : (
+                    <div style={{ maxHeight: '45vh', overflow: 'auto' }}>
+                        {orders.map(o => (
+                            <details key={o.id} style={{ border: '1px solid #ddd', borderRadius: 6, padding: 8, marginBottom: 8 }}>
+                                <summary>#{o.id} - {o.status} - Total: {o.total}</summary>
+                                <ul style={{ listStyle: 'none', padding: 0, marginTop: 8 }}>
+                                    {(o.items || []).map(it => (
+                                        <li key={it.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                                            <span>{it.productName} x {it.quantity}</span>
+                                            <span>{it.productPrice} - {it.lineTotal}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                {o.status === 'PENDING' && (
+                                    <button onClick={async () => { await OrdersAPI.complete(o.id); await loadOrders(); }}>Complete Order</button>
+                                )}
+                            </details>
+                        ))}
+                    </div>
+                )}
+            </aside>
         </div>
     );
 }

@@ -69,3 +69,25 @@ export const SyncAPI = {
     return request("/sync/fakestore", { method: "POST" });
   },
 };
+
+export const OrdersAPI = {
+  async create(items) {
+    return request("/orders", { method: "POST", body: { items } });
+  },
+  async complete(id) {
+    return request(`/orders/${id}/complete`, { method: "PATCH" });
+  },
+  async list({ limit = 50, offset = 0, status } = {}) {
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.set("limit", String(limit));
+    if (offset !== undefined) params.set("offset", String(offset));
+    if (status) params.set("status", status);
+    return request(`/orders?${params.toString()}`);
+  },
+  async get(id) {
+    return request(`/orders/${id}`);
+  },
+  async remove(id) {
+    return request(`/orders/${id}`, { method: "DELETE" });
+  },
+};
