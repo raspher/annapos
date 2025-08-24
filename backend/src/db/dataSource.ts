@@ -11,8 +11,8 @@ const annaposDataSource = new DataSource({
   database: `${config.POSTGRES_DB}`,
   synchronize: false,
   logging: true,
-  entities: [User],
-  migrations: ['migrations/*.ts'],
+  entities: ['entities/*.ts'],
+  migrations: ['../../migrations/*.ts'],
 });
 
 export default annaposDataSource;
