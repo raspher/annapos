@@ -14,6 +14,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app # host files override container
+      - /app/node_modules # preserve installed os-specific node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true #polling for nodemon
     profiles: [ "dev" ]
@@ -31,6 +32,7 @@ services:
       - backend
     volumes:
       - ./frontend:/app # host files override container
+      - /app/node_modules # preserve installed os-specific node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true #polling for nodemon
     profiles: [ "dev" ]
