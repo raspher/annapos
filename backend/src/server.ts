@@ -1,9 +1,9 @@
 import "reflect-metadata"
 import express from 'express';
-import { sanitizer } from './routes/middleware.js';
+import { sanitizer } from './routes/middleware.ts';
 import cookieParser from 'cookie-parser';
-import config from './shared/config.js';
-import apiRoutes from './routes/index.js';
+import config from './shared/config.ts';
+import apiRoutes from './routes/index.ts';
 import cors from 'cors';
 
 const app = express();
