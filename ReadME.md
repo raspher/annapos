@@ -9,6 +9,8 @@ Rozwiązanie mające na celu ułatwienie obsługi zamówień w sklepie stacjonar
 - `docker-compose --profile dev --env-file .\.env.dev up --build`
 - `docker-compose --profile prod --env-file .\.env.prod up --build`
 
+`--build` jest wymagane gdy zmieniamy/aktualizujemy zależności
+
 Projekt ma 2 profile:
 
 dev:
