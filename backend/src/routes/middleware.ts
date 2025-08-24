@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import xss from 'xss';
-import config from '../shared/config.js';
+import config from '../shared/config.ts';
 import { NextFunction, Request, Response } from 'express';
-import {AuthPayload} from "../types/AuthPayload.js";
+import {AuthPayload} from "../types/AuthPayload.ts";
 
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const token = (req as any).cookies?.token as string | undefined;
