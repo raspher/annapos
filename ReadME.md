@@ -33,21 +33,9 @@ prod:
 - `JWT_SECRET` - klucz szyfrujący token
 - `API_PORT` - port na którym ma nasłuchiwać API (`8080`)
 - `PROFILE` - na podtrzeby CORS (`DEV` / `PROD`)
-
-## Architektura
-
-- Vertical slice - zwiększa czytelność i stabilność kodu
-
-### todo
-- aktualne stany magazynowe? stany się nie zmieniają...
-- zamówienie - klient?
-- klienci przy dodawaniu zamówienia?
-- DOKUMENTACJA:
-  - Specyfikacja funkcjonalna (co robi aplikacja),
-  - Specyfikacja techniczna (stack, struktura, diagramy – opcjonalnie),
-  - Plik `README.md` (z instrukcją uruchomienia i danymi logowania),
-  - PRD (Product Requirements Document),
-  - Changelog (jeśli występuje rozwój iteracyjny).
-
-opcjonalnie:
-- udawany guzik "paragon" i "faktura" w liście zamówień?
+- `FRONTEND_PORT=`
+- `POSTGRES_USER=`
+- `POSTGRES_PASSWORD=`
+- `POSTGRES_DB=`
+- `POSTGRES_PORT=5432`
+- `POSTGRES_HOST=db` - nazwa kontenera
