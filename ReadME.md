@@ -39,9 +39,7 @@ prod:
 - Vertical slice - zwiększa czytelność i stabilność kodu
 
 ### todo
-- ARCHITEKTURA PROJEKTU
 - aktualne stany magazynowe? stany się nie zmieniają...
-- wszystko zabezpieczone tokenem?
 - zamówienie - klient?
 - klienci przy dodawaniu zamówienia?
 - DOKUMENTACJA:
@@ -50,7 +48,6 @@ prod:
   - Plik `README.md` (z instrukcją uruchomienia i danymi logowania),
   - PRD (Product Requirements Document),
   - Changelog (jeśli występuje rozwój iteracyjny).
-- TESTY
 
 opcjonalnie:
 - udawany guzik "paragon" i "faktura" w liście zamówień?
