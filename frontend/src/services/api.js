@@ -30,9 +30,9 @@ export const AuthAPI = {
     const data = await request("/auth/login", {
       method: "POST",
       body: { email, password },
-    }).then(value => JSON.parse(value));
+    });
     // backend returns: { user, token }
-    return { user: data.user.name, accessToken: data.token };
+    return { user: data.user.name.toString(), accessToken: data.token.toString() };
   },
   async logout() {
     await request("/auth/logout", { method: "POST" });

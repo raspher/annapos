@@ -25,12 +25,15 @@
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^24.3.0",
-    "ts-node-dev": "^2.0.0"
+    "ts-node-dev": "^2.0.0",
+    "vitest": "^2.1.4"
   },
   "scripts": {
     "dev": "tsx watch --inspect=0.0.0.0:9229 src/server.ts",
     "start": "yarn migrate:run && node ./dist/server.js",
     "build": "tsc -p .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "migrate:run": "node --loader ts-node/esm --env-file=../.env.dev ./node_modules/typeorm/cli.js migration:run -d dist/src/db/dataSource.js",
     "migrate:gen": "node --loader ts-node/esm --env-file=../.env.dev ./node_modules/typeorm/cli.js migration:generate --esm -d dist/src/db/dataSource.js",
     "migrate:create": "node --loader ts-node/esm --env-file=../.env.dev ./node_modules/typeorm/cli.js migration:create --esm"

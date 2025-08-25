@@ -3,159 +3,217 @@ import { CategoriesAPI, ProductsAPI, SyncAPI } from "../services/api.js";
 import Loading from "../components/Loading.jsx";
 import { useCart } from "../context/CartContext.jsx";
 
+function useCategories(query) {
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    const loadCategories = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const res = await CategoriesAPI.list({ q: query || undefined });
+            setCategories(res.items || []);
+        } catch (e) {
+            console.error(e);
+            setError(String(e.message || e));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadCategories();
+    }, [query]);
+
+    return { categories, loading, error, reload: loadCategories };
+}
+
+function useProducts({ query, categoryId, limit, offset }) {
+    const [products, setProducts] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    const loadProducts = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const res = await ProductsAPI.list({
+                q: query || undefined,
+                categoryId: categoryId ? Number(categoryId) : undefined,
+                limit,
+                offset,
+            });
+            setProducts(res.items || []);
+            setTotal(res.total || 0);
+        } catch (e) {
+            console.error(e);
+            setError(String(e.message || e));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadProducts();
+    }, [query, categoryId, limit, offset]);
+
+    return { products, total, loading, error, reload: loadProducts };
+}
+
+function ProductCard({ product, onAdd }) {
+    return (
+        <div className="border border-gray-300 rounded-lg p-3">
+            {product.imageUrl && (
+                <img
+                    src={product.imageUrl}
+                    alt={product.title}
+                    className="max-w-full max-h-36 object-contain"
+                />
+            )}
+            <div className="font-semibold mt-2">{product.title}</div>
+            <div className="text-gray-700">{product.category?.name}</div>
+            <div className="mt-1">
+                Price: <b>{product.price}</b>
+            </div>
+            {product.ratingRate != null && (
+                <div className="text-gray-500 text-xs">
+                    Rating: {product.ratingRate} ({product.ratingCount ?? 0})
+                </div>
+            )}
+            <button className="mt-2 btn" onClick={() => onAdd(product, 1)}>
+                Add to Cart
+            </button>
+        </div>
+    );
+}
+
+function PaginationControls({ offset, limit, total, setOffset, setLimit }) {
+    return (
+        <div className="flex gap-2 items-center mt-3">
+            <button onClick={() => setOffset(Math.max(0, offset - limit))} disabled={offset === 0}>
+                Prev
+            </button>
+            <span>Page {Math.floor(offset / limit) + 1}</span>
+            <button onClick={() => setOffset(offset + limit)} disabled={offset + limit >= total}>
+                Next
+            </button>
+            <span className="ml-3">Per page:</span>
+            <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+                {[10, 20, 50, 100].map((n) => (
+                    <option key={n} value={n}>
+                        {n}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+}
+
 export default function ProductsPage() {
-  const { add } = useCart();
+    const { add } = useCart();
 
-  const [catQuery, setCatQuery] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+    const [prodQuery, setProdQuery] = useState("");
+    const [catQuery, setCatQuery] = useState("");
+    const [selectedCategoryId, setSelectedCategoryId] = useState("");
+    const [limit, setLimit] = useState(20);
+    const [offset, setOffset] = useState(0);
 
-  const [prodQuery, setProdQuery] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [products, setProducts] = useState([]);
-  const [productsTotal, setProductsTotal] = useState(0);
-  const [limit, setLimit] = useState(20);
-  const [offset, setOffset] = useState(0);
-  const [productsLoading, setProductsLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
+    const [info, setInfo] = useState("");
 
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
-
-  const selectedCategory = useMemo(() => {
-    const idNum = Number(selectedCategoryId);
-    return categories.find(c => c.id === idNum) || null;
-  }, [selectedCategoryId, categories]);
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    setOffset(0);
-  }, [prodQuery, selectedCategoryId]);
-
-  useEffect(() => {
-    loadProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prodQuery, selectedCategoryId, limit, offset]);
-
-  async function loadCategories() {
-    setCategoriesLoading(true);
-    setError("");
-    try {
-      const res = await CategoriesAPI.list({ q: catQuery || undefined });
-      setCategories(res.items || []);
-    } catch (e) {
-      console.error(e);
-      setError(String(e.message || e));
-    } finally {
-      setCategoriesLoading(false);
-    }
-  }
-
-  async function loadProducts() {
-    setProductsLoading(true);
-    setError("");
-    try {
-      const res = await ProductsAPI.list({
-        q: prodQuery || undefined,
-        categoryId: selectedCategoryId ? Number(selectedCategoryId) : undefined,
+    const { categories, loading: categoriesLoading } = useCategories(catQuery);
+    const { products, total, loading: productsLoading, error: productsError, reload: reloadProducts } = useProducts({
+        query: prodQuery,
+        categoryId: selectedCategoryId,
         limit,
         offset,
-      });
-      setProducts(res.items || []);
-      setProductsTotal(res.total || 0);
-    } catch (e) {
-      console.error(e);
-      setError(String(e.message || e));
-    } finally {
-      setProductsLoading(false);
-    }
-  }
+    });
 
-  async function handleSync() {
-    setSyncing(true);
-    setInfo("");
-    setError("");
-    try {
-      await SyncAPI.fakestore();
-      setInfo("Synchronization completed.");
-      await Promise.all([loadCategories(), loadProducts()]);
-    } catch (e) {
-      console.error(e);
-      setError(`Sync failed: ${e.message || e}`);
-    } finally {
-      setSyncing(false);
-    }
-  }
+    const selectedCategory = useMemo(() => {
+        const idNum = Number(selectedCategoryId);
+        return categories.find((c) => c.id === idNum) || null;
+    }, [selectedCategoryId, categories]);
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <header style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-        <h2 style={{ margin: 0, marginRight: "auto" }}>Products</h2>
-        <button onClick={handleSync} disabled={syncing}>{syncing ? "Syncing..." : "Sync FakeStore"}</button>
-      </header>
+    const handleSync = async () => {
+        setSyncing(true);
+        setInfo("");
+        try {
+            await SyncAPI.fakestore();
+            setInfo("Synchronization completed.");
+            reloadProducts();
+        } catch (e) {
+            console.error(e);
+            alert(`Sync failed: ${e.message || e}`);
+        } finally {
+            setSyncing(false);
+        }
+    };
 
-      {info && <p style={{ color: "green" }}>{info}</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    return (
+        <div className="flex flex-col h-full">
+            <header className="flex gap-2 items-center mb-3">
+                <h2 className="mr-auto">Products</h2>
+                <button onClick={handleSync} disabled={syncing}>
+                    {syncing ? "Syncing..." : "Sync FakeStore"}
+                </button>
+            </header>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={prodQuery}
-          onChange={(e) => setProdQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && loadProducts()}
-          style={{ flex: 1 }}
-        />
-        <select value={selectedCategoryId} onChange={(e) => setSelectedCategoryId(e.target.value)} style={{ minWidth: 180 }}>
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <button onClick={loadProducts} disabled={productsLoading}>Search</button>
-      </div>
+            {info && <p className="text-green-600">{info}</p>}
 
-      {categoriesLoading && <div style={{ marginBottom: 8 }}><Loading message="Loading categories..."/></div>}
+            <div className="flex gap-2 mb-2">
+                <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={prodQuery}
+                    onChange={(e) => setProdQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && reloadProducts()}
+                    className="flex-1 border p-1 rounded"
+                />
+                <select
+                    value={selectedCategoryId}
+                    onChange={(e) => setSelectedCategoryId(e.target.value)}
+                    className="min-w-[180px] border p-1 rounded"
+                >
+                    <option value="">All categories</option>
+                    {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                            {c.name}
+                        </option>
+                    ))}
+                </select>
+                <button onClick={reloadProducts} disabled={productsLoading}>
+                    Search
+                </button>
+            </div>
 
-      {productsLoading ? (
-        <Loading message="Loading products..." />
-      ) : (
-        <div>
-          <div style={{ marginBottom: 8, color: "#666" }}>
-            Showing {products.length} of {productsTotal} items
-            {selectedCategory ? ` in '${selectedCategory.name}'` : ""}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12 }}>
-            {products.map((p) => (
-              <div key={p.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-                {p.imageUrl && (
-                  <img src={p.imageUrl} alt={p.title} style={{ maxWidth: "100%", maxHeight: 140, objectFit: "contain" }} />
-                )}
-                <div style={{ fontWeight: 600, marginTop: 8 }}>{p.title}</div>
-                <div style={{ color: "#444" }}>{p.category?.name}</div>
-                <div style={{ marginTop: 4 }}>Price: <b>{p.price}</b></div>
-                {p.ratingRate != null && (
-                  <div style={{ color: "#777", fontSize: 12 }}>Rating: {p.ratingRate} ({p.ratingCount ?? 0})</div>
-                )}
-                <button style={{ marginTop: 8 }} onClick={() => add(p, 1)}>Add to Cart</button>
-              </div>
-            ))}
-          </div>
+            {categoriesLoading && <Loading message="Loading categories..." />}
+            {productsLoading ? (
+                <Loading message="Loading products..." />
+            ) : productsError ? (
+                <p className="text-red-600">{productsError}</p>
+            ) : (
+                <>
+                    <div className="text-gray-600 mb-2">
+                        Showing {products.length} of {total} items
+                        {selectedCategory ? ` in '${selectedCategory.name}'` : ""}
+                    </div>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
+                        {products.map((p) => (
+                            <ProductCard key={p.id} product={p} onAdd={add} />
+                        ))}
+                    </div>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
-            <button onClick={() => setOffset(Math.max(0, offset - limit))} disabled={offset === 0}>Prev</button>
-            <span>Page {Math.floor(offset / limit) + 1}</span>
-            <button onClick={() => setOffset(offset + limit)} disabled={offset + limit >= productsTotal}>Next</button>
-            <span style={{ marginLeft: 12 }}>Per page:</span>
-            <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
-              {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </div>
+                    <PaginationControls
+                        offset={offset}
+                        limit={limit}
+                        total={total}
+                        setOffset={setOffset}
+                        setLimit={setLimit}
+                    />
+                </>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
