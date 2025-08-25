@@ -1,21 +1,17 @@
-import dataSource from "../db/dataSource.ts";
-import { Order } from "../db/entities/Order.ts";
-import { OrderItem } from "../db/entities/OrderItem.ts";
+import orderRepository from "../repositories/orderRepository.ts";
+import orderItemRepository from "../repositories/orderItemRepository.ts";
+import productRepository from "../repositories/productRepository.ts";
 import { Product } from "../db/entities/Product.ts";
-import { In } from "typeorm";
 
 export async function createOrder(items: Array<{ productId: number; quantity: number }>) {
-  const productRepo = dataSource.getRepository(Product);
-  const orderRepo = dataSource.getRepository(Order);
-  const orderItemRepo = dataSource.getRepository(OrderItem);
-
+  // Fetch products via ProductRepository
   const ids = [...new Set(items.map(i => Number(i.productId)).filter(Boolean))];
-  const products = ids.length ? await productRepo.find({ where: { id: In(ids) } }) : [];
+  const products = await productRepository.findByIds(ids);
   const prodMap = new Map<number, Product>();
-  for (const p of products) prodMap.set(p.id, p);
+  for (const p of products) prodMap.set(p.id, p as Product);
 
-  const order = orderRepo.create({ status: 'PENDING', total: '0.00' });
-  await orderRepo.save(order);
+  const order = orderRepository.create({ status: 'PENDING', total: '0.00' } as any);
+  await orderRepository.save(order);
 
   let totalCents = 0;
   for (const it of items) {
@@ -26,52 +22,42 @@ export async function createOrder(items: Array<{ productId: number; quantity: nu
     const lineCents = priceCents * qty;
     totalCents += lineCents;
 
-    const oi = orderItemRepo.create({
-      order,
-      product,
+    const oi = orderItemRepository.create({
+      order: order as any,
+      product: product as any,
       productName: product.title,
       productPrice: Number(product.price).toFixed(2),
       quantity: qty,
       lineTotal: (lineCents / 100).toFixed(2),
-    });
-    await orderItemRepo.save(oi);
+    } as any);
+    await orderItemRepository.save(oi as any);
   }
 
-  order.total = (totalCents / 100).toFixed(2);
-  await orderRepo.save(order);
-  return orderRepo.findOne({ where: { id: order.id }, relations: ['items', 'items.product'] });
+  (order as any).total = (totalCents / 100).toFixed(2);
+  await orderRepository.save(order as any);
+  return orderRepository.findByIdWithRelations((order as any).id);
 }
 
 export async function completeOrder(id: number) {
-  const orderRepo = dataSource.getRepository(Order);
-  const order = await orderRepo.findOne({ where: { id } });
+  const order = await orderRepository.findById(id);
   if (!order) return null;
-  if (order.status === 'COMPLETED') return order;
-  order.status = 'COMPLETED';
-  await orderRepo.save(order);
-  return orderRepo.findOne({ where: { id }, relations: ['items', 'items.product'] });
+  if ((order as any).status === 'COMPLETED') return order;
+  (order as any).status = 'COMPLETED';
+  await orderRepository.save(order as any);
+  return orderRepository.findByIdWithRelations(id);
 }
 
 export async function listOrders({ limit = 50, offset = 0, status }: { limit?: number; offset?: number; status?: string; }) {
-  const qb = dataSource.getRepository(Order).createQueryBuilder('order')
-    .leftJoinAndSelect('order.items', 'items')
-    .leftJoinAndSelect('items.product', 'product')
-    .orderBy('order.createdAt', 'DESC')
-    .take(Math.min(limit, 100))
-    .skip(offset);
-  if (status) qb.where('order.status = :status', { status });
-  const [items, total] = await qb.getManyAndCount();
-  return { items, total, limit: Math.min(limit, 100), offset };
+  return orderRepository.list({ limit, offset, status });
 }
 
 export async function getOrder(id: number) {
-  return dataSource.getRepository(Order).findOne({ where: { id }, relations: ['items', 'items.product'] });
+  return orderRepository.findByIdWithRelations(id);
 }
 
 export async function deleteOrder(id: number) {
-  const orderRepo = dataSource.getRepository(Order);
-  const order = await orderRepo.findOne({ where: { id } });
+  const order = await orderRepository.findById(id);
   if (!order) return false;
-  await orderRepo.softRemove(order);
+  await orderRepository.softRemove(order as any);
   return true;
 }

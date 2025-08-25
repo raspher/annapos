@@ -1,4 +1,5 @@
-import dataSource from "../db/dataSource.ts";
+import categoryRepository from "../repositories/categoryRepository.ts";
+import productRepository from "../repositories/productRepository.ts";
 import { Category } from "../db/entities/Category.ts";
 import { Product } from "../db/entities/Product.ts";
 
@@ -8,16 +9,13 @@ export async function syncFakeStore() {
   if (!catResp.ok) throw new Error('Failed to fetch categories');
   const categoryNames: string[] = await catResp.json();
 
-  const categoryRepo = dataSource.getRepository(Category);
-  const productRepo = dataSource.getRepository(Product);
-
   // Upsert categories
   const categoriesMap = new Map<string, Category>();
   for (const name of categoryNames) {
-    let category = await categoryRepo.findOne({ where: { name } });
+    let category = await categoryRepository.findByName(name);
     if (!category) {
-      category = categoryRepo.create({ name });
-      await categoryRepo.save(category);
+      category = categoryRepository.create({ name });
+      await categoryRepository.save(category);
     }
     categoriesMap.set(name, category);
   }
@@ -32,7 +30,7 @@ export async function syncFakeStore() {
     const cat = categoriesMap.get(p.category);
     if (!cat) continue;
 
-    let product = await productRepo.findOne({ where: { externalId: p.id } });
+    let product = await productRepository.findByExternalId(p.id);
     const payload: Partial<Product> = {
       externalId: p.id,
       title: p.title,
@@ -45,11 +43,11 @@ export async function syncFakeStore() {
     };
 
     if (!product) {
-      product = productRepo.create(payload);
+      product = productRepository.create(payload);
     } else {
       Object.assign(product, payload);
     }
-    await productRepo.save(product);
+    await productRepository.save(product as Product);
   }
 
   return { message: 'Synchronization completed' };

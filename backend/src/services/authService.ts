@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import config from '../shared/config.ts';
-import dataSource from "../db/dataSource.ts";
+import userRepository from "../repositories/userRepository.ts";
 import { User } from "../db/entities/User.ts";
 
 export interface LoginResult {
@@ -10,7 +10,7 @@ export interface LoginResult {
 }
 
 export async function login(email: string, password: string): Promise<LoginResult | null> {
-  const user = await dataSource.manager.findOne(User, { where: { email } });
+  const user = await userRepository.findByEmail(email);
   if (!user) return null;
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return null;
