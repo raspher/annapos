@@ -1,5 +1,5 @@
 import './App.css'
-import StorePage from "./pages/Store.jsx";
+import StorePage from "./pages/MainPage.jsx";
 import {AuthProvider, useAuth} from "./components/Auth.jsx";
 import LoginPage from "./pages/Login.jsx";
 import Loading from "./components/Loading.jsx";
