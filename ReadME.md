@@ -11,7 +11,14 @@ Rozwiązanie mające na celu ułatwienie obsługi zamówień w sklepie stacjonar
 
 `--build` jest wymagane gdy zmieniamy/aktualizujemy zależności
 
-Projekt ma 2 profile:
+- **jak wgrać migracje** - [How to](backend/docs/database.md)
+(pomijam .env w repo, zamieszczone celowo jako przykład)
+- **wdrożenie**: docker-compose na VPS, nie korzystałem nigdy z *Vercel / Netlify / Render / Railway*
+- **dane logowania** (dodane w migracji): 
+  - login: `admin@admin.pl` 
+  - hasło:`changeme`
+
+### Profile
 
 dev:
 - debugowanie backendu domyślnie na porcie `9229`
@@ -27,11 +34,23 @@ prod:
 - `API_PORT` - port na którym ma nasłuchiwać API (`8080`)
 - `PROFILE` - na podtrzeby CORS (`DEV` / `PROD`)
 
-### Deploy
-**TODO**
-
-zalecany `docker-compose`
-
 ## Architektura
 
 - Vertical slice - zwiększa czytelność i stabilność kodu
+
+### todo
+- ARCHITEKTURA PROJEKTU
+- aktualne stany magazynowe? stany się nie zmieniają...
+- wszystko zabezpieczone tokenem?
+- zamówienie - klient?
+- klienci przy dodawaniu zamówienia?
+- DOKUMENTACJA:
+  - Specyfikacja funkcjonalna (co robi aplikacja),
+  - Specyfikacja techniczna (stack, struktura, diagramy – opcjonalnie),
+  - Plik `README.md` (z instrukcją uruchomienia i danymi logowania),
+  - PRD (Product Requirements Document),
+  - Changelog (jeśli występuje rozwój iteracyjny).
+- TESTY
+
+opcjonalnie:
+- udawany guzik "paragon" i "faktura" w liście zamówień?
