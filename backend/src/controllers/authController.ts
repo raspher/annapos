@@ -14,7 +14,7 @@ export async function login(req: Request, res: Response) {
   const result = await loginService(email, password);
   if (!result) return res.status(401).send('Invalid credentials');
   res.cookie('token', result.token, getCookieOptions);
-  res.status(200).send(JSON.stringify({ user: result.user, token: result.token }));
+  res.status(200).json({ user: result.user, token: result.token });
 }
 
 export function logout(req: Request, res: Response) {
@@ -25,5 +25,5 @@ export function logout(req: Request, res: Response) {
 export function cookie(req: Request, res: Response) {
   const user = (req as any).user?.username;
   const token = (req as any).cookies?.token;
-  res.status(200).send(JSON.stringify({ user, token }));
+  res.status(200).json({ user, token });
 }
