@@ -2,10 +2,11 @@ import Router, { Request, Response } from 'express';
 import dataSource from "../db/dataSource.ts";
 import { Category } from "../db/entities/Category.ts";
 import { Product } from "../db/entities/Product.ts";
+import {authenticateToken} from "./middleware.js";
 
 const router = Router();
 
-router.post('/fakestore', async (req: Request, res: Response) => {
+router.post('/fakestore', authenticateToken, async (req: Request, res: Response) => {
   try {
     // Fetch categories
     const catResp = await fetch('https://fakestoreapi.com/products/categories');
