@@ -1,7 +1,9 @@
 import { DataSource } from 'typeorm';
 import { User } from './entities/User.js';
-import {Category, Product} from './entities/Product.js';
-import {Order, OrderItem} from './entities/Order.js';
+import {Product} from './entities/Product.js';
+import {Order} from './entities/Order.js';
+import {Category} from "./entities/Category.js";
+import {OrderItem} from "./entities/OrderItem.js";
 import config from '../shared/config.js';
 import path from "path";
 import {fileURLToPath} from "url";

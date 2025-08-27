@@ -1,5 +1,5 @@
 import annaposDataSource from "../db/dataSource.js";
-import {OrderItem} from "../db/entities/Order.js";
+import {OrderItem} from "../db/entities/OrderItem.js";
 
 export class OrderItemRepository {
   repo = annaposDataSource.getRepository(OrderItem);

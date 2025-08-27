@@ -1,5 +1,5 @@
 import annaposDataSource from "../db/dataSource.js";
-import {Category} from "../db/entities/Product.js";
+import {Category} from "../db/entities/Category.js";
 
 export class CategoryRepository {
   repo = annaposDataSource.getRepository(Category);
