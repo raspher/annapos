@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { OrderItem } from "./OrderItem.js";
+import type { OrderItem } from "./OrderItem.js";
 
 export type OrderStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 
@@ -14,7 +14,7 @@ export class Order {
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   total!: string; // numeric as string
 
-  @OneToMany(() => OrderItem, (item) => item.order, { cascade: ['insert'], eager: true })
+  @OneToMany("OrderItem", (item: OrderItem) => item.order, { cascade: ['insert'], eager: true })
   items!: OrderItem[];
 
   @CreateDateColumn()

@@ -30,7 +30,7 @@
   },
   "scripts": {
     "dev": "tsx watch --inspect=0.0.0.0:9229 src/server.ts",
-    "start": "yarn migrate:run && node ./dist/server.js",
+    "start": "yarn migrate:run && node ./dist/src/server.js",
     "build": "tsc -p .",
     "test": "vitest run",
     "test:watch": "vitest",

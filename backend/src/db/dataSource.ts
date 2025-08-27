@@ -5,6 +5,11 @@ import { Product } from './entities/Product.js';
 import { Order } from './entities/Order.js';
 import { OrderItem } from './entities/OrderItem.js';
 import config from '../shared/config.js';
+import path from "path";
+import {fileURLToPath} from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const annaposDataSource = new DataSource({
   type: 'postgres',
@@ -16,7 +21,7 @@ const annaposDataSource = new DataSource({
   synchronize: false,
   logging: true,
   entities: [User, Category, Product, Order, OrderItem],
-  migrations: ['../../migrations/*.ts'],
+  migrations: [path.join(__dirname, '../../migrations/*.js')],
 });
 
 export default annaposDataSource;

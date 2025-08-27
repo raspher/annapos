@@ -1,5 +1,8 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Category } from "./Category.js";
+import {
+    Column, CreateDateColumn, DeleteDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn,
+    Relation, UpdateDateColumn
+} from "typeorm";
+import type { Category } from "./Category.js";
 
 @Entity()
 export class Product {
@@ -28,8 +31,8 @@ export class Product {
   @Column({ type: 'int', nullable: true })
   ratingCount!: number | null;
 
-  @ManyToOne(() => Category, { nullable: false, eager: true })
-  category!: Category;
+  @ManyToOne("Category", { nullable: false, eager: true })
+  category!: Relation<Category>;
 
   @CreateDateColumn()
   createdAt!: Date;

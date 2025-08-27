@@ -15,6 +15,7 @@ WORKDIR /app/backend
 COPY backend/package.json backend/yarn.lock ./
 RUN yarn
 COPY backend ./
+RUN yarn build
 
 # Copy only the frontend build output
 COPY --from=frontend-builder /app/frontend/dist ./public
