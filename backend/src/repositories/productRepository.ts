@@ -1,5 +1,5 @@
-import annaposDataSource from "../db/dataSource.ts";
-import { Product } from "../db/entities/Product.ts";
+import annaposDataSource from "../db/dataSource.js";
+import { Product } from "../db/entities/Product.js";
 import { In } from "typeorm";
 
 export class ProductRepository {

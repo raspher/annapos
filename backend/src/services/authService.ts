@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import config from '../shared/config.ts';
-import userRepository from "../repositories/userRepository.ts";
-import { User } from "../db/entities/User.ts";
+import config from '../shared/config.js';
+import userRepository from "../repositories/userRepository.js";
+import { User } from "../db/entities/User.js";
 
 export interface LoginResult {
   user: User;

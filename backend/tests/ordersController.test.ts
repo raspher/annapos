@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { postOrder } from '../src/controllers/ordersController.ts';
+import { postOrder } from '../src/controllers/ordersController.js';
 
 vi.mock('../src/services/orderService.ts', () => ({
   createOrder: vi.fn(),
 }));
 
-import { createOrder } from '../src/services/orderService.ts';
+import { createOrder } from '../src/services/orderService.js';
 
 function mockRes() {
   const res: any = {};

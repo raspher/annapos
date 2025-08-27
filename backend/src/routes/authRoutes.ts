@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import Router from 'express';
-import { authenticateToken } from './middleware.ts';
-import { login, logout, cookie } from '../controllers/authController.ts';
+import { authenticateToken } from './middleware.js';
+import { login, logout, cookie } from '../controllers/authController.js';
 
 const router = Router();
 

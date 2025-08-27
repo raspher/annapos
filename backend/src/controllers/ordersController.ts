@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { completeOrder, createOrder, deleteOrder, getOrder, listOrders } from '../services/orderService.ts';
+import { completeOrder, createOrder, deleteOrder, getOrder, listOrders } from '../services/orderService.js';
 
 export async function postOrder(req: Request, res: Response) {
   try {

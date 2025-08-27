@@ -1,6 +1,6 @@
 import Router from 'express';
-import { authenticateToken } from './middleware.ts';
-import { syncFakeStoreController } from '../controllers/syncController.ts'
+import { authenticateToken } from './middleware.js';
+import { syncFakeStoreController } from '../controllers/syncController.js'
 
 const router = Router();
 

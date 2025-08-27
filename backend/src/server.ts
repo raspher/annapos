@@ -1,11 +1,13 @@
 import "reflect-metadata"
 import express from 'express';
-import { sanitizer } from './routes/middleware.ts';
+import { sanitizer } from './routes/middleware.js';
 import cookieParser from 'cookie-parser';
-import config from './shared/config.ts';
-import apiRoutes from './routes/index.ts';
+import config from './shared/config.js';
+import apiRoutes from './routes/index.js';
 import cors from 'cors';
+import dataSource from "./db/dataSource.js";
 
+await dataSource.initialize();
 const app = express();
 
 app.use(express.json());

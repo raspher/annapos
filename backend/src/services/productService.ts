@@ -1,4 +1,4 @@
-import productRepository from "../repositories/productRepository.ts";
+import productRepository from "../repositories/productRepository.js";
 
 export interface ListProductsParams {
   q?: string;

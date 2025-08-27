@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { listCategories } from '../services/categoryService.ts';
+import { listCategories } from '../services/categoryService.js';
 
 export async function getCategories(req: Request, res: Response) {
   try {
