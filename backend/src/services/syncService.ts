@@ -1,7 +1,6 @@
 import categoryRepository from "../repositories/categoryRepository.js";
 import productRepository from "../repositories/productRepository.js";
-import { Category } from "../db/entities/Category.js";
-import { Product } from "../db/entities/Product.js";
+import {Category, Product} from "../db/entities/Product.js";
 
 export async function syncFakeStore() {
   // Fetch categories
