@@ -1,7 +1,7 @@
-import categoryRepository from "../repositories/categoryRepository.ts";
-import productRepository from "../repositories/productRepository.ts";
-import { Category } from "../db/entities/Category.ts";
-import { Product } from "../db/entities/Product.ts";
+import categoryRepository from "../repositories/categoryRepository.js";
+import productRepository from "../repositories/productRepository.js";
+import { Category } from "../db/entities/Category.js";
+import { Product } from "../db/entities/Product.js";
 
 export async function syncFakeStore() {
   // Fetch categories

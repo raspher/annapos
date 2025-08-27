@@ -1,9 +1,9 @@
 import Router from 'express';
-import authRoutes from './authRoutes.ts';
-import productRoutes from './productRoutes.ts';
-import categoryRoutes from './categoryRoutes.ts';
-import syncRoutes from './syncRoutes.ts';
-import ordersRoutes from './ordersRoutes.ts';
+import authRoutes from './authRoutes.js';
+import productRoutes from './productRoutes.js';
+import categoryRoutes from './categoryRoutes.js';
+import syncRoutes from './syncRoutes.js';
+import ordersRoutes from './ordersRoutes.js';
 
 const apiRoutes = Router();
 

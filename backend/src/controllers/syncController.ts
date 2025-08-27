@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { syncFakeStore } from '../services/syncService.ts';
+import { syncFakeStore } from '../services/syncService.js';
 
 export async function syncFakeStoreController(req: Request, res: Response) {
   try {

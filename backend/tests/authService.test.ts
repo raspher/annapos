@@ -19,8 +19,8 @@ vi.mock('../src/repositories/userRepository.ts', () => ({
   },
 }));
 
-import userRepository from '../src/repositories/userRepository.ts';
-import * as authService from '../src/services/authService.ts';
+import userRepository from '../src/repositories/userRepository.js';
+import * as authService from '../src/services/authService.js';
 import bcrypt from 'bcryptjs';
 
 vi.mock('bcryptjs');

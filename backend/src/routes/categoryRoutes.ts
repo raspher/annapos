@@ -1,6 +1,6 @@
 import Router from 'express';
-import { getCategories } from '../controllers/categoryController.ts';
-import { authenticateToken } from './middleware.ts';
+import { getCategories } from '../controllers/categoryController.js';
+import { authenticateToken } from './middleware.js';
 
 const router = Router();
 

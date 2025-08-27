@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { OrderItem } from "./OrderItem.ts";
+import { OrderItem } from "./OrderItem.js";
 
 export type OrderStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 

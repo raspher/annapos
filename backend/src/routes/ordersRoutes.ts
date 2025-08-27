@@ -1,6 +1,6 @@
 import Router from 'express';
-import { deleteOrderById, getOrderById, getOrders, patchComplete, postOrder } from '../controllers/ordersController.ts';
-import { authenticateToken } from './middleware.ts';
+import { deleteOrderById, getOrderById, getOrders, patchComplete, postOrder } from '../controllers/ordersController.js';
+import { authenticateToken } from './middleware.js';
 
 const router = Router();
 

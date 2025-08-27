@@ -1,7 +1,7 @@
-import orderRepository from "../repositories/orderRepository.ts";
-import orderItemRepository from "../repositories/orderItemRepository.ts";
-import productRepository from "../repositories/productRepository.ts";
-import { Product } from "../db/entities/Product.ts";
+import orderRepository from "../repositories/orderRepository.js";
+import orderItemRepository from "../repositories/orderItemRepository.js";
+import productRepository from "../repositories/productRepository.js";
+import { Product } from "../db/entities/Product.js";
 
 export async function createOrder(items: Array<{ productId: number; quantity: number }>) {
   // Fetch products via ProductRepository

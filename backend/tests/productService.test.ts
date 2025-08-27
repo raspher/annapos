@@ -6,8 +6,8 @@ vi.mock('../src/repositories/productRepository.ts', () => ({
   },
 }));
 
-import productRepository from '../src/repositories/productRepository.ts';
-import { listProducts } from '../src/services/productService.ts';
+import productRepository from '../src/repositories/productRepository.js';
+import { listProducts } from '../src/services/productService.js';
 
 describe('productService.listProducts', () => {
   beforeEach(() => vi.resetAllMocks());

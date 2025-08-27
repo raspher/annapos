@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Order } from "./Order.ts";
-import { Product } from "./Product.ts";
+import { Order } from "./Order.js";
+import { Product } from "./Product.js";
 
 @Entity()
 export class OrderItem {

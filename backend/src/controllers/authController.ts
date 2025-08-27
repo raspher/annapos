@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import { login as loginService } from '../services/authService.ts';
-import { authenticateToken } from '../routes/middleware.ts';
+import { login as loginService } from '../services/authService.js';
 
 const getCookieOptions = {
   httpOnly: true,
