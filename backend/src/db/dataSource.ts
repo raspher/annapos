@@ -1,9 +1,7 @@
 import { DataSource } from 'typeorm';
 import { User } from './entities/User.js';
-import { Category } from './entities/Category.js';
-import { Product } from './entities/Product.js';
-import { Order } from './entities/Order.js';
-import { OrderItem } from './entities/OrderItem.js';
+import {Category, Product} from './entities/Product.js';
+import {Order, OrderItem} from './entities/Order.js';
 import config from '../shared/config.js';
 
 const annaposDataSource = new DataSource({
